@@ -18,20 +18,6 @@ spec:
       targetPort: 81
       protocol: TCP    
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default-reader
-  namespace: default
-subjects:
-- kind: Group
-  name: system:serviceaccounts
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin
-  apiGroup: rbac.authorization.k8s.io
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -65,12 +51,6 @@ spec:
             value: "Server=tcp:game-sqlserver.windows.net,1433;Initial Catalog=gamedb;Persist Security Info=False;User ID=gamedbadministrator;Password=herebepassword;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
           - name: "ARCADE_BACKENDURL"
             value: "http://arcadebackend/pick"
-        resources:
-          requests:
-            cpu: 0.25
-          limits:
-            cpu: 0.5
-            
       - name: istio-proxy
         image: ghcr.io/azure-adventure-day/azure-adventure-day-coach/gamedayengine-sidecar:latest
         imagePullPolicy: Always
@@ -88,18 +68,3 @@ spec:
       - name: config-volume
         hostPath:
           path: /etc/kubernetes/
----
-apiVersion: autoscaling/v1
-kind: HorizontalPodAutoscaler
-metadata:
-  name: blackboxgameengine
-  namespace: default
-spec:
-  maxReplicas: 10
-  minReplicas: 1
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: blackboxgameengine
-  targetCPUUtilizationPercentage: 20
-

@@ -19,7 +19,7 @@ kind: Deployment
 metadata:
   name: arcadebackend
 spec:
-  replicas: 3
+  # replicas: 3
   selector:
     matchLabels:
       name: arcadebackend      
@@ -48,3 +48,36 @@ spec:
             value: "RANDOM"
           - name: "FF_BETS"
             value: "1"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 0.25
+          limits:
+            cpu: 0.5
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+    autoscaling.alpha.kubernetes.io/conditions: '[{"type":"AbleToScale","status":"True","lastTransitionTime":"2020-11-12T12:47:40Z","reason":"ScaleDownStabilized","message":"recent
+      recommendations were higher than current one, applying the highest recent recommendation"},{"type":"ScalingActive","status":"True","lastTransitionTime":"2020-11-12T12:59:05Z","reason":"ValidMetricFound","message":"the
+      HPA was able to successfully calculate a replica count from cpu resource utilization
+      (percentage of request)"},{"type":"ScalingLimited","status":"False","lastTransitionTime":"2020-11-12T12:59:05Z","reason":"DesiredWithinRange","message":"the
+      desired count is within the acceptable range"}]'
+    autoscaling.alpha.kubernetes.io/current-metrics: '[{"type":"Resource","resource":{"name":"cpu","currentAverageUtilization":13,"currentAverageValue":"34m"}}]'
+  name: arcadebackend
+  namespace: default
+  resourceVersion: "30218"
+spec:
+  maxReplicas: 10
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: arcadebackend
+  targetCPUUtilizationPercentage: 20
